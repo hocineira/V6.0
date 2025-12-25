@@ -28,8 +28,8 @@ export default function StagesIndexPage() {
       duree: 'À définir',
       lieu: 'À définir',
       type: 'Stage professionnel',
-      secteur: 'Formation professionnelle',
-      description: 'Stage à venir au sein du CPRPF (Centre Provençal de Rééducation et de Préformation). Plus de détails seront disponibles prochainement.',
+      secteur: 'Organisme de prévoyance et retraite',
+      description: 'Stage à venir au sein du CPRPF (Caisse de prévoyance et de retraite du personnel ferroviaire). Plus de détails seront disponibles prochainement.',
       couleur: 'from-orange-500 to-pink-600',
       disponible: false
     }

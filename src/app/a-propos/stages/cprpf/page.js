@@ -9,14 +9,15 @@ export default function StageCPRPFPage() {
   
   const stageInfo = {
     entreprise: 'CPRPF',
+    nomComplet: 'Caisse de prévoyance et de retraite du personnel ferroviaire',
     logo: '/images/stages/logo-cprpf.svg',
     periodeDebut: 'À définir',
     periodeFin: 'À définir',
     duree: 'À définir',
     lieu: 'À définir',
     type: 'Stage professionnel BTS SIO SISR',
-    secteur: 'Formation professionnelle et rééducation',
-    description: 'Stage à venir au sein du CPRPF (Centre Provençal de Rééducation et de Préformation). Plus de détails seront disponibles prochainement une fois le stage commencé.'
+    secteur: 'Organisme de prévoyance et retraite',
+    description: 'Stage à venir au sein du CPRPF (Caisse de prévoyance et de retraite du personnel ferroviaire). Plus de détails seront disponibles prochainement une fois le stage commencé.'
   };
 
   return (
