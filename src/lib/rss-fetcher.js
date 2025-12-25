@@ -393,23 +393,34 @@ class WindowsRSSFetcher {
         'vulnérabilité', 'vulnérable', 'faille', 'sécurité', 'correctif', 
         'patch', 'exploit', 'cyberattaque', 'cybersécurité', 'malware',
         'ransomware', 'virus', 'antivirus', 'zero-day', 'cve-', 'kb\\d{7}',
-        'mise à jour de sécurité', 'security update', 'defender', 'bitlocker'
+        'mise à jour de sécurité', 'security update', 'defender', 'bitlocker',
+        'protection', 'menace', 'attaque', 'piratage', 'hacker'
       ],
       serveur: [
         'windows server', 'serveur 2025', 'serveur 2022', 'serveur 2019',
         'datacenter', 'centre de données', 'active directory', 'hyper-v',
         'sql server', 'exchange server', 'iis', 'dns server', 'dhcp',
-        'wsus', 'clustering', 'failover', 'load balanc', 'virtualisation'
+        'wsus', 'clustering', 'failover', 'load balanc', 'virtualisation',
+        'azure stack', 'infrastructure serveur', 'serveur web'
       ],
       particuliers: [
-        'windows 11', 'windows 10', 'particulier', 'grand public',
-        'pc', 'ordinateur portable', 'desktop', 'poste de travail',
-        'consumer', 'home edition', 'famille', 'gaming', 'jeu'
+        'windows 11 home', 'windows 10 home', 'windows 11', 'windows 10',
+        'particulier', 'grand public', 'consommateur',
+        'pc portable', 'ordinateur portable', 'laptop', 'desktop',
+        'poste de travail', 'ordinateur personnel',
+        'office famille', 'microsoft 365 famille', 'onedrive personnel',
+        'windows home', 'édition familiale', 'usage domestique',
+        'paramètres windows', 'menu démarrer', 'barre des tâches',
+        'explorateur de fichiers', 'widgets windows'
       ],
       entreprise: [
+        'windows 11 pro', 'windows 10 pro', 'windows enterprise',
         'entreprise', 'pme', 'organisation', 'professionnel',
         'déploiement', 'gestion', 'administration', 'it pro',
-        'intune', 'endpoint', 'azure ad', 'microsoft 365'
+        'intune', 'endpoint manager', 'azure ad', 'entra',
+        'microsoft 365 entreprise', 'office 365 business',
+        'gestion des appareils', 'stratégie de groupe', 'gpo',
+        'windows pro', 'édition professionnelle'
       ]
     };
     
@@ -475,58 +486,86 @@ class WindowsRSSFetcher {
   isRelevantForWindows(update) {
     const text = (update.title + " " + update.description).toLowerCase();
     
-    // Keywords Windows/Windows Server (français)
-    const windowsKeywords = [
-      'windows server', 'windows 11', 'windows 10', 'windows', 
-      'serveur 2025', 'serveur 2022', 'serveur 2019', 'active directory', 
-      'hyper-v', 'iis', 'dns', 'dhcp', 'stratégies de groupe', 'gpo',
-      'microsoft', 'azure', 'office', 'exchange'
+    // EXCLUSIONS STRICTES - Articles clairement non pertinents
+    const strictExclusions = [
+      // Hardware non-Microsoft
+      'iphone', 'ipad', 'mac', 'macbook', 'imac', 'apple',
+      'samsung', 'sony', 'lg', 'xiaomi', 'huawei', 'oppo',
+      'playstation', 'ps5', 'ps4', 'xbox series', 'nintendo', 'switch',
+      // Électroménager
+      'machine à café', 'cafetière', 'nespresso', 'dolce gusto',
+      'aspirateur', 'robot cuiseur', 'multicuiseur', 'cookeo',
+      'lave-linge', 'lave-vaisselle', 'réfrigérateur', 'four',
+      // Équipement non-IT
+      'enceinte bluetooth', 'casque audio', 'écouteurs', 'airpods',
+      'trottinette', 'vélo électrique', 'hoverboard',
+      'montre connectée', 'bracelet connecté', 'fitbit',
+      // Entertainment
+      'netflix', 'spotify', 'disney+', 'amazon prime video',
+      'jeu vidéo', 'gaming', 'gamer', 'streamer', 'twitch',
+      // Composants PC (sauf si lié Windows)
+      'ssd nvme', 'disque dur externe', 'clé usb', 'carte sd',
+      'carte graphique', 'gpu', 'rtx', 'gtx', 'radeon',
+      'processeur intel', 'processeur amd', 'ryzen',
+      'carte mère', 'ram ddr', 'alimentation pc',
+      // Téléphonie/Tablettes non-Microsoft
+      'smartphone', 'téléphone portable', 'mobile',
+      'tablette android', 'galaxy tab', 'ipad',
+      // Autres
+      'crypto', 'bitcoin', 'nft', 'blockchain',
+      'voyage', 'tourisme', 'hôtel', 'restaurant',
+      'mode', 'vêtement', 'chaussure', 'sneakers'
     ];
     
-    // Keywords infrastructure et systèmes (français)
-    const infraKeywords = [
-      'infrastructure', 'centre de données', 'datacenter', 'entreprise', 'admin', 'administration',
-      'déploiement', 'migration', 'sauvegarde', 'récupération', 'clustering',
-      'virtualisation', 'réseau', 'sécurité', 'correctif', 'mise à jour', 'patch',
-      'serveur', 'poste de travail', 'iot', 'objets connectés'
+    // Si article contient exclusion stricte, rejeter immédiatement
+    if (strictExclusions.some(keyword => text.includes(keyword))) {
+      // Exception : si l'article mentionne explicitement Windows/Microsoft, garder
+      const hasMicrosoftMention = text.includes('windows') || 
+                                   text.includes('microsoft') || 
+                                   text.includes('office 365') ||
+                                   text.includes('azure');
+      if (!hasMicrosoftMention) {
+        return false;
+      }
+    }
+    
+    // MOTS-CLÉS OBLIGATOIRES - Au moins un doit être présent
+    const mandatoryKeywords = [
+      // Produits Microsoft
+      'windows 11', 'windows 10', 'windows server', 'windows',
+      'microsoft', 'office 365', 'office 2021', 'office 2019', 'office',
+      'onedrive', 'outlook', 'teams', 'sharepoint', 'azure',
+      'edge', 'bing', 'copilot',
+      // Infrastructure Windows
+      'active directory', 'ad', 'hyper-v', 'iis', 'dns server', 'dhcp',
+      'powershell', 'wsus', 'gpo', 'stratégie de groupe',
+      // Sécurité Windows
+      'defender', 'bitlocker', 'windows update', 'patch tuesday',
+      'correctif windows', 'mise à jour windows', 'kb\\d{7}',
+      // Administration Windows
+      'serveur windows', 'poste windows', 'pc windows',
+      'ordinateur windows', 'système windows',
+      // Cloud Microsoft
+      'azure', 'microsoft 365', 'm365', 'intune', 'entra',
+      // Développement Microsoft
+      '.net', 'visual studio', 'vscode', 'github microsoft'
     ];
     
-    // Keywords techniques professionnels (français)
-    const techKeywords = [
-      'powershell', 'sql server', 'exchange', 'sharepoint', 'system center',
-      'wsus', 'rds', 'services de terminal', 'cluster de basculement', 'espaces de stockage',
-      'docker', 'kubernetes', 'conteneurs', 'cloud', 'nuage', 'cybersécurité'
-    ];
+    // Vérifier présence d'au moins un mot-clé obligatoire
+    const hasMandatoryKeyword = mandatoryKeywords.some(keyword => {
+      if (keyword.includes('\\d')) {
+        // Regex pour KB + 7 chiffres
+        return new RegExp(keyword, 'i').test(text);
+      }
+      return text.includes(keyword);
+    });
     
-    // Categories spécifiques
-    const categoryKeywords = {
-      particuliers: ['particulier', 'grand public', 'poste de travail', 'pc', 'ordinateur'],
-      serveur: ['serveur', 'server', 'datacenter', 'centre de données', 'infrastructure'],
-      iot: ['iot', 'objets connectés', 'internet des objets', 'capteur', 'device'],
-      entreprise: ['entreprise', 'pme', 'tpe', 'organisation', 'professionnel']
-    };
+    // Si aucun mot-clé obligatoire, rejeter
+    if (!hasMandatoryKeyword) {
+      return false;
+    }
     
-    // Vérifier présence keywords pertinents
-    const hasWindowsKeyword = windowsKeywords.some(keyword => text.includes(keyword));
-    const hasInfraKeyword = infraKeywords.some(keyword => text.includes(keyword));
-    const hasTechKeyword = techKeywords.some(keyword => text.includes(keyword));
-    const hasCategoryKeyword = Object.values(categoryKeywords).flat().some(keyword => text.includes(keyword));
-    
-    // Exclure les articles non pertinents
-    const excludeKeywords = [
-      'jeux', 'gaming', 'divertissement', 'musique', 'film', 'streaming',
-      'sport', 'finance personnelle', 'cuisine', 'voyage'
-    ];
-    const hasExcludeKeyword = excludeKeywords.some(keyword => text.includes(keyword));
-    
-    // Logique de filtrage élargie pour sources françaises
-    if (hasExcludeKeyword) return false;
-    if (hasWindowsKeyword) return true;
-    if (hasInfraKeyword) return true;
-    if (hasTechKeyword) return true;
-    if (hasCategoryKeyword) return true;
-    
-    // Pour les sources françaises spécialisées, on accepte plus largement
+    // Si on arrive ici, l'article est pertinent
     return true;
   }
 
