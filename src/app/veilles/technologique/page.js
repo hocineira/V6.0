@@ -10,25 +10,57 @@ export default function VeilleTechnologique() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMessage, setRefreshMessage] = useState('');
 
   // Fetch updates
-  useEffect(() => {
-    async function fetchUpdates() {
-      try {
-        setLoading(true);
-        const res = await fetch(`/api/windows/updates?limit=50`);
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setUpdates(data.updates || []);
-        setTotal(data.total || 0);
-        setError(false);
-      } catch (err) {
-        console.error('Error fetching updates:', err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+  const fetchUpdates = async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      const res = await fetch(`/api/windows/updates?limit=50`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setUpdates(data.updates || []);
+      setTotal(data.total || 0);
+      setError(false);
+    } catch (err) {
+      console.error('Error fetching updates:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Refresh RSS feeds
+  const refreshFeeds = async () => {
+    try {
+      setRefreshing(true);
+      setRefreshMessage('Récupération des flux RSS en cours...');
+      
+      const res = await fetch('/api/windows/updates/refresh', {
+        method: 'POST'
+      });
+      
+      if (!res.ok) throw new Error('Failed to refresh');
+      
+      const data = await res.json();
+      setRefreshMessage(`✅ ${data.stored} articles chargés sur ${data.total} récupérés`);
+      
+      // Reload updates after refresh
+      await fetchUpdates();
+      
+      setTimeout(() => setRefreshMessage(''), 5000);
+    } catch (err) {
+      console.error('Error refreshing feeds:', err);
+      setRefreshMessage('❌ Erreur lors du rafraîchissement');
+      setTimeout(() => setRefreshMessage(''), 5000);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUpdates();
   }, []);
 
@@ -579,6 +611,37 @@ export default function VeilleTechnologique() {
             <p className="text-slate-600 text-center mb-8 max-w-3xl mx-auto">
               Suivez les dernières actualités Windows depuis les sources officielles Microsoft et les médias français spécialisés en infrastructure IT
             </p>
+
+            {/* Refresh Button and Message */}
+            <div className="flex flex-col items-center gap-4 mb-8">
+              <button
+                onClick={refreshFeeds}
+                disabled={refreshing}
+                className={`flex items-center space-x-2 px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                  refreshing
+                    ? 'bg-slate-300 text-slate-600 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg hover:scale-105'
+                }`}
+              >
+                <svg 
+                  className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{refreshing ? 'Chargement...' : 'Charger les actualités RSS'}</span>
+              </button>
+              
+              {refreshMessage && (
+                <div className={`px-4 py-2 rounded-lg ${
+                  refreshMessage.includes('✅') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {refreshMessage}
+                </div>
+              )}
+            </div>
           </FadeIn>
 
           {/* Categories Filter */}
@@ -610,11 +673,31 @@ export default function VeilleTechnologique() {
               <div className="loading-spinner mx-auto mb-4"></div>
               <p className="text-slate-600">Chargement des actualités...</p>
             </div>
-          ) : filteredUpdates.length === 0 ? (
+          ) : error || filteredUpdates.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-slate-100">
-              <div className="text-4xl mb-4">📰</div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune actualité trouvée</h3>
-              <p className="text-slate-600">Aucune actualité n'est disponible pour cette catégorie actuellement.</p>
+              <div className="text-6xl mb-4">📰</div>
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                {error ? 'Erreur de chargement' : 'Aucune actualité disponible'}
+              </h3>
+              <p className="text-slate-600 mb-6">
+                {error 
+                  ? 'Impossible de charger les actualités. Vérifiez votre connexion.'
+                  : updates.length === 0 
+                    ? 'Cliquez sur le bouton "Charger les actualités RSS" ci-dessus pour récupérer les dernières actualités Windows.'
+                    : 'Aucune actualité trouvée pour cette catégorie. Essayez une autre catégorie.'}
+              </p>
+              {(error || updates.length === 0) && (
+                <button
+                  onClick={updates.length === 0 ? refreshFeeds : fetchUpdates}
+                  disabled={refreshing}
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:bg-slate-300"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>{error ? 'Réessayer' : 'Charger les actualités'}</span>
+                </button>
+              )}
             </div>
           ) : (
             <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6">
