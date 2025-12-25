@@ -22,7 +22,7 @@ export default function StagesPage() {
   
   const stageInfo = {
     entreprise: 'Sauvegarde13',
-    logo: '/images/stages/logo-sauvegarde13.svg',
+    logo: '/images/stages/logo-sauvegarde13.png',
     periode: 'Mars 2025 - Mai 2025',
     duree: '1 mois',
     lieu: 'Marseille, France',
