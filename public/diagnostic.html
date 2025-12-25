@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Diagnostic - Portfolio</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .test {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .success { border-left: 4px solid #10b981; }
+        .error { border-left: 4px solid #ef4444; }
+        h1 { text-align: center; }
+        pre {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnostic du Portfolio</h1>
+    
+    <div class="test success">
+        <h2>✅ Cette page s'affiche</h2>
+        <p>Le serveur web fonctionne correctement.</p>
+    </div>
+
+    <div class="test" id="jsTest">
+        <h2>⏳ Test JavaScript...</h2>
+    </div>
+
+    <div class="test" id="cssTest">
+        <h2>Test CSS</h2>
+        <div style="width: 100px; height: 100px; background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 50%; margin: 10px auto;"></div>
+    </div>
+
+    <div class="test" id="fetchTest">
+        <h2>Test Fetch API</h2>
+        <button onclick="testFetch()">Tester Fetch</button>
+        <pre id="fetchResult">Cliquez pour tester</pre>
+    </div>
+
+    <div class="test">
+        <h2>📊 Informations Système</h2>
+        <pre id="sysInfo"></pre>
+    </div>
+
+    <div class="test">
+        <h2>🔧 Console du Navigateur</h2>
+        <p>Ouvrez la console (F12) pour voir les erreurs éventuelles.</p>
+        <button onclick="triggerError()">Provoquer une erreur test</button>
+    </div>
+
+    <script>
+        // Test JavaScript
+        document.getElementById('jsTest').innerHTML = `
+            <h2>✅ JavaScript Fonctionne</h2>
+            <p>Les scripts sont exécutés correctement.</p>
+        `;
+        document.getElementById('jsTest').className = 'test success';
+
+        // Informations système
+        const sysInfo = {
+            userAgent: navigator.userAgent,
+            platform: navigator.platform,
+            language: navigator.language,
+            cookiesEnabled: navigator.cookieEnabled,
+            online: navigator.onLine,
+            screenWidth: screen.width,
+            screenHeight: screen.height,
+            windowWidth: window.innerWidth,
+            windowHeight: window.innerHeight,
+            memory: navigator.deviceMemory || 'Non disponible',
+            cores: navigator.hardwareConcurrency || 'Non disponible'
+        };
+        
+        document.getElementById('sysInfo').textContent = JSON.stringify(sysInfo, null, 2);
+
+        // Test Fetch
+        async function testFetch() {
+            try {
+                const response = await fetch(window.location.href);
+                const result = {
+                    status: response.status,
+                    statusText: response.statusText,
+                    headers: {
+                        contentType: response.headers.get('content-type'),
+                        cacheControl: response.headers.get('cache-control')
+                    }
+                };
+                document.getElementById('fetchResult').textContent = JSON.stringify(result, null, 2);
+                document.getElementById('fetchTest').className = 'test success';
+            } catch (error) {
+                document.getElementById('fetchResult').textContent = 'Erreur: ' + error.message;
+                document.getElementById('fetchTest').className = 'test error';
+            }
+        }
+
+        // Test erreur
+        function triggerError() {
+            console.error('ERREUR DE TEST - Ceci est normal');
+            console.warn('WARNING DE TEST - Ceci est normal');
+            console.log('LOG DE TEST - Vérifiez que la console fonctionne');
+            alert('Vérifiez la console du navigateur (F12)');
+        }
+
+        // Détection CSP
+        console.log('%c🔍 Diagnostic du Portfolio', 'font-size: 20px; font-weight: bold; color: #667eea');
+        console.log('Si vous voyez ce message, JavaScript fonctionne correctement.');
+        console.log('Recherchez les erreurs CSP (Content Security Policy) ci-dessous:');
+        
+        // Test inline script (devrait déclencher erreur CSP si trop restrictive)
+        try {
+            eval('console.log("Eval fonctionne - CSP pas trop restrictive")');
+        } catch (e) {
+            console.error('CSP bloque eval - C\'est normal et sécurisé');
+        }
+    </script>
+</body>
+</html>
