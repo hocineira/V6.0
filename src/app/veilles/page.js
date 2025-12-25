@@ -104,11 +104,11 @@ export default function VeillesPage() {
       {/* Veilles Cards Section with Animations */}
       <section className="py-12 sm:py-20">
         <div className="container mx-auto px-3 sm:px-4">
-          <StaggerContainer staggerDelay={0.15} className="grid gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3 max-w-7xl mx-auto">
+          <StaggerContainer staggerDelay={0.15} className="grid gap-8 sm:gap-10 md:grid-cols-2 max-w-6xl mx-auto justify-items-center">
             {veillesCategories.map((veille, index) => {
               const Icon = veille.icon
               return (
-                <StaggerItem key={veille.id}>
+                <StaggerItem key={veille.id} className="w-full max-w-md">
                   <AnimatedCard delay={index * 0.1}>
                     <Link href={veille.link}>
                       <Card className="group cursor-pointer hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-3 overflow-hidden border-0 shadow-lg h-full">
