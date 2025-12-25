@@ -14,6 +14,7 @@ import {
   Network
 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
 import StageGallery from '../../../../components/StageGallery';
 
@@ -21,6 +22,7 @@ export default function StagesPage() {
   
   const stageInfo = {
     entreprise: 'Sauvegarde13',
+    logo: '/images/stages/logo-sauvegarde13.svg',
     periode: 'Mars 2025 - Mai 2025',
     duree: '1 mois',
     lieu: 'Marseille, France',
@@ -101,20 +103,34 @@ export default function StagesPage() {
         </Link>
       </div>
 
-      {/* Hero Section */}
-      <section className="py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mb-6 shadow-lg">
-            <Building className="w-10 h-10 text-white" />
+      {/* Header avec logo */}
+      <section className="px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+            
+            {/* Banner avec logo */}
+            <div className="relative h-64 bg-gradient-to-br from-blue-500 via-green-500 to-red-500 flex items-center justify-center">
+              <div className="relative w-72 h-48">
+                <Image
+                  src={stageInfo.logo}
+                  alt={`Logo ${stageInfo.entreprise}`}
+                  fill
+                  className="object-contain p-6"
+                  priority
+                />
+              </div>
+            </div>
+
+            {/* Titre et introduction */}
+            <div className="p-8 text-center">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+                Stage chez {stageInfo.entreprise}
+              </h1>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                {stageInfo.description}
+              </p>
+            </div>
           </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-            Mes Stages
-          </h1>
-          
-          <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Découvrez mon expérience professionnelle en entreprise
-          </p>
         </div>
       </section>
 
@@ -122,13 +138,7 @@ export default function StagesPage() {
       <section className="py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl mb-12">
-            <CardHeader className="text-center">
-              <CardTitle className="text-3xl md:text-4xl flex items-center justify-center gap-3">
-                <Building className="w-8 h-8 text-blue-600" />
-                Stage chez {stageInfo.entreprise}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
+            <CardContent className="pt-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
                   <Calendar className="w-8 h-8 text-blue-600 mx-auto mb-2" />
@@ -153,13 +163,10 @@ export default function StagesPage() {
               </div>
 
               <div className="text-center">
-                <p className="text-lg text-gray-700 leading-relaxed max-w-4xl mx-auto mb-6">
+                <p className="text-lg text-gray-700 leading-relaxed max-w-4xl mx-auto">
                   Durant ce stage de 1 mois chez <strong>Sauvegarde13</strong>, j&apos;ai eu l&apos;opportunité de mettre en pratique 
                   mes connaissances théoriques acquises en BTS SIO SISR. Cette expérience m&apos;a permis de découvrir 
                   le monde professionnel de l&apos;informatique et de développer mes compétences techniques dans un environnement réel.
-                </p>
-                <p className="text-base text-gray-600 leading-relaxed max-w-3xl mx-auto">
-                  {stageInfo.description}
                 </p>
               </div>
             </CardContent>
