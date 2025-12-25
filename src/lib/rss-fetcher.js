@@ -115,7 +115,7 @@ class WindowsRSSFetcher {
   parseRSSItem(itemXml, source) {
     try {
       // Extract basic fields
-      const title = this.extractXmlTag(itemXml, 'title') || "Sans titre";
+      const title = this.cleanHtml(this.extractXmlTag(itemXml, 'title')) || "Sans titre";
       const link = this.extractXmlTag(itemXml, 'link') || "";
       const description = this.cleanHtml(this.extractXmlTag(itemXml, 'description') || "");
       const pubDate = this.extractXmlTag(itemXml, 'pubDate') || new Date().toISOString();
@@ -141,8 +141,11 @@ class WindowsRSSFetcher {
       // Extract severity for security updates
       const severity = this.extractSeverity(title + " " + description);
       
+      // Detect category based on content (more accurate than source category)
+      const detectedCategory = this.detectCategory(title, description) || source.category;
+      
       // Generate tags
-      const tags = this.generateTags(title, description, source.category);
+      const tags = this.generateTags(title, description, detectedCategory);
 
       return {
         id: this.generateId(title, link),
@@ -150,7 +153,7 @@ class WindowsRSSFetcher {
         description: finalDescription,
         link: link,
         published_date: publishedDate.toISOString(),
-        category: source.category,
+        category: detectedCategory,
         version: version,
         kb_number: kbNumber,
         severity: severity,
@@ -184,14 +187,30 @@ class WindowsRSSFetcher {
     text = text.replace(/^<!\[CDATA\[/g, '');
     text = text.replace(/\]\]>$/g, '');
     
-    // Decode HTML entities
+    // Decode HTML entities (named entities)
     text = text
       .replace(/&amp;/g, '&')
       .replace(/&lt;/g, '<')
       .replace(/&gt;/g, '>')
       .replace(/&quot;/g, '"')
       .replace(/&#39;/g, "'")
-      .replace(/&nbsp;/g, ' ');
+      .replace(/&apos;/g, "'")
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&laquo;/g, '«')
+      .replace(/&raquo;/g, '»')
+      .replace(/&hellip;/g, '…')
+      .replace(/&mdash;/g, '—')
+      .replace(/&ndash;/g, '–');
+    
+    // Decode numeric HTML entities (&#8217; etc.)
+    text = text.replace(/&#(\d+);/g, (match, dec) => {
+      return String.fromCharCode(dec);
+    });
+    
+    // Decode hex HTML entities (&#x2019; etc.)
+    text = text.replace(/&#x([0-9a-fA-F]+);/g, (match, hex) => {
+      return String.fromCharCode(parseInt(hex, 16));
+    });
     
     // Clean up extra whitespace and newlines
     text = text.replace(/\s+/g, ' ').trim();
@@ -251,6 +270,67 @@ class WindowsRSSFetcher {
     }
     
     return null;
+  }
+
+  detectCategory(title, description) {
+    const text = (title + " " + description).toLowerCase();
+    
+    // Priority-based category detection (most specific first)
+    const categoryPatterns = {
+      security: [
+        'vulnérabilité', 'vulnérable', 'faille', 'sécurité', 'correctif', 
+        'patch', 'exploit', 'cyberattaque', 'cybersécurité', 'malware',
+        'ransomware', 'virus', 'antivirus', 'zero-day', 'cve-', 'kb\\d{7}',
+        'mise à jour de sécurité', 'security update', 'defender', 'bitlocker'
+      ],
+      serveur: [
+        'windows server', 'serveur 2025', 'serveur 2022', 'serveur 2019',
+        'datacenter', 'centre de données', 'active directory', 'hyper-v',
+        'sql server', 'exchange server', 'iis', 'dns server', 'dhcp',
+        'wsus', 'clustering', 'failover', 'load balanc', 'virtualisation'
+      ],
+      iot: [
+        'iot', 'internet des objets', 'objets connectés', 'capteur',
+        'device', 'appareil connecté', 'smart home', 'domotique',
+        'edge computing', 'embedded', 'raspberry', 'arduino'
+      ],
+      particuliers: [
+        'windows 11', 'windows 10', 'particulier', 'grand public',
+        'pc', 'ordinateur portable', 'desktop', 'poste de travail',
+        'consumer', 'home edition', 'famille', 'gaming', 'jeu'
+      ],
+      entreprise: [
+        'entreprise', 'pme', 'organisation', 'professionnel',
+        'déploiement', 'gestion', 'administration', 'it pro',
+        'intune', 'endpoint', 'azure ad', 'microsoft 365'
+      ]
+    };
+    
+    // Score each category
+    const scores = {};
+    for (const [category, keywords] of Object.entries(categoryPatterns)) {
+      scores[category] = 0;
+      for (const keyword of keywords) {
+        const regex = new RegExp(keyword, 'i');
+        if (regex.test(text)) {
+          scores[category]++;
+        }
+      }
+    }
+    
+    // Find category with highest score
+    let maxScore = 0;
+    let detectedCategory = null;
+    
+    for (const [category, score] of Object.entries(scores)) {
+      if (score > maxScore) {
+        maxScore = score;
+        detectedCategory = category;
+      }
+    }
+    
+    // Return detected category if score is significant (at least 1 match)
+    return maxScore > 0 ? detectedCategory : null;
   }
 
   generateTags(title, description, category) {
@@ -459,17 +539,27 @@ class WindowsRSSFetcher {
 
   async fetchAllFeeds() {
     const allUpdates = [];
+    const sourceKeys = Object.keys(this.sources);
     
-    for (const sourceKey of Object.keys(this.sources)) {
+    logger.rss(`🔄 Récupération de ${sourceKeys.length} sources RSS...`);
+    
+    for (const sourceKey of sourceKeys) {
       try {
+        logger.rss(`📡 Traitement de ${sourceKey}...`);
         const updates = await this.fetchFeed(sourceKey);
-        allUpdates.push(...updates);
         
-        // Délai configurable entre les requêtes
+        if (updates && updates.length > 0) {
+          allUpdates.push(...updates);
+          logger.rss(`✅ ${sourceKey}: ${updates.length} articles récupérés`);
+        } else {
+          logger.rss(`⚠️  ${sourceKey}: aucun article récupéré`);
+        }
+        
+        // Délai configurable entre les requêtes pour éviter les limites de taux
         const delay = parseInt(process.env.NEXT_PUBLIC_RSS_REQUEST_DELAY) || 1000;
         await new Promise(resolve => setTimeout(resolve, delay));
       } catch (error) {
-        logger.error(`❌ Erreur source ${sourceKey}:`, error);
+        logger.error(`❌ Erreur source ${sourceKey}:`, error.message);
         continue;
       }
     }
@@ -477,7 +567,15 @@ class WindowsRSSFetcher {
     // Sort by publication date (newest first)
     allUpdates.sort((a, b) => new Date(b.published_date) - new Date(a.published_date));
     
-    logger.rss(`🎯 Total mises à jour récupérées : ${allUpdates.length}`);
+    logger.rss(`🎯 Total: ${allUpdates.length} articles de ${sourceKeys.length} sources`);
+    
+    // Log category distribution
+    const categoryCount = {};
+    allUpdates.forEach(update => {
+      categoryCount[update.category] = (categoryCount[update.category] || 0) + 1;
+    });
+    logger.rss(`📊 Répartition: ${JSON.stringify(categoryCount)}`);
+    
     return allUpdates;
   }
 }
