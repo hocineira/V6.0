@@ -207,7 +207,7 @@ export default function TCSPage() {
               </CardContent>
             </Card>
 
-            {/* Compétences avec barres de progression */}
+            {/* Compétences développées */}
             <Card className="shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
               <CardHeader>
                 <CardTitle className="text-xl sm:text-2xl text-gray-900 flex items-center">
@@ -216,19 +216,18 @@ export default function TCSPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {tcsInfo.skills.map((skill, index) => {
                     const IconComponent = skill.icon;
                     return (
-                      <div key={index} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center">
-                            <IconComponent className="w-4 h-4 text-blue-600 mr-2" />
-                            <span className="text-sm font-medium text-gray-700">{skill.name}</span>
-                          </div>
-                          <span className="text-sm text-purple-600 font-semibold">{skill.level}%</span>
+                      <div 
+                        key={index} 
+                        className="flex items-center gap-3 p-4 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 transition-all duration-300 border border-blue-100"
+                      >
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <IconComponent className="w-5 h-5 text-white" />
                         </div>
-                        <ProgressBar level={skill.level} />
+                        <span className="text-sm font-medium text-gray-800">{skill.name}</span>
                       </div>
                     );
                   })}
