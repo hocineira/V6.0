@@ -69,8 +69,7 @@ export default function VeilleTechnologique() {
     { key: 'particuliers', label: 'Particuliers', icon: '💻' },
     { key: 'serveur', label: 'Serveur', icon: '🖥️' },
     { key: 'security', label: 'Sécurité', icon: '🔒' },
-    { key: 'entreprise', label: 'Entreprise', icon: '🏢' },
-    { key: 'iot', label: 'IoT', icon: '🌐' }
+    { key: 'entreprise', label: 'Entreprise', icon: '🏢' }
   ];
 
   const filteredUpdates = selectedCategory === 'all' 
@@ -106,7 +105,6 @@ export default function VeilleTechnologique() {
       'serveur': '🖥️',
       'security': '🔒',
       'entreprise': '🏢',
-      'iot': '🌐',
       'feature': '⭐'
     };
     return categoryMap[category] || '📄';

@@ -87,14 +87,6 @@ class WindowsRSSFetcher {
         language: "fr"
       },
       
-      // Numerama - Actualités tech
-      numerama: {
-        url: "https://www.numerama.com/feed/",
-        name: "Numerama",
-        category: "particuliers",
-        language: "fr"
-      },
-      
       // Silicon.fr - Actualités pro IT
       silicon: {
         url: "https://www.silicon.fr/feed",
@@ -381,11 +373,6 @@ class WindowsRSSFetcher {
         'datacenter', 'centre de données', 'active directory', 'hyper-v',
         'sql server', 'exchange server', 'iis', 'dns server', 'dhcp',
         'wsus', 'clustering', 'failover', 'load balanc', 'virtualisation'
-      ],
-      iot: [
-        'iot', 'internet des objets', 'objets connectés', 'capteur',
-        'device', 'appareil connecté', 'smart home', 'domotique',
-        'edge computing', 'embedded', 'raspberry', 'arduino'
       ],
       particuliers: [
         'windows 11', 'windows 10', 'particulier', 'grand public',
