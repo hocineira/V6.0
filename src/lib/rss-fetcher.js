@@ -7,10 +7,55 @@ import { logger } from './logger';
 class WindowsRSSFetcher {
   constructor() {
     this.sources = {
+      // IT-Connect - Très fiable, spécialisé Windows/Infrastructure
+      it_connect: {
+        url: "https://www.it-connect.fr/feed/",
+        name: "IT-Connect",
+        category: "entreprise",
+        language: "fr"
+      },
+      
+      // Clubic - Grand public tech
+      clubic_windows: {
+        url: "https://www.clubic.com/feed/tag/windows/",
+        name: "Clubic - Windows",
+        category: "particuliers",
+        language: "fr"
+      },
+      clubic_microsoft: {
+        url: "https://www.clubic.com/feed/tag/microsoft/",
+        name: "Clubic - Microsoft",
+        category: "entreprise",
+        language: "fr"
+      },
+      
+      // 01net - Actualités tech françaises
+      o1net_logiciels: {
+        url: "https://www.01net.com/rss/logiciels.xml",
+        name: "01net - Logiciels",
+        category: "particuliers",
+        language: "fr"
+      },
+      o1net_securite: {
+        url: "https://www.01net.com/rss/securite.xml",
+        name: "01net - Sécurité",
+        category: "security",
+        language: "fr"
+      },
+      
+      // ZDNet France - Professionnel
+      zdnet_actualites: {
+        url: "https://www.zdnet.fr/feeds/rss/actualites/",
+        name: "ZDNet France",
+        category: "entreprise",
+        language: "fr"
+      },
+      
+      // Le Monde Informatique - Sources Pro
       lemondeinformatique_os: {
         url: "https://www.lemondeinformatique.fr/flux-rss/thematique/os/rss.xml",
         name: "Le Monde Informatique - OS",
-        category: "particuliers",
+        category: "serveur",
         language: "fr"
       },
       lemondeinformatique_securite: {
@@ -19,40 +64,58 @@ class WindowsRSSFetcher {
         category: "security",
         language: "fr"
       },
-      lemondeinformatique_poste: {
-        url: "https://www.lemondeinformatique.fr/flux-rss/thematique/poste-de-travail/rss.xml",
-        name: "Le Monde Informatique - Poste de Travail",
-        category: "particuliers",
-        language: "fr"
-      },
-      lemondeinformatique_pme: {
-        url: "https://www.lemondeinformatique.fr/flux-rss/thematique/pme/rss.xml",
-        name: "Le Monde Informatique - PME",
-        category: "entreprise",
-        language: "fr"
-      },
       lemondeinformatique_datacenter: {
         url: "https://www.lemondeinformatique.fr/flux-rss/thematique/datacenter/rss.xml",
         name: "Le Monde Informatique - Datacenter",
         category: "serveur",
         language: "fr"
       },
-      it_connect: {
-        url: "https://www.it-connect.fr/feed/",
-        name: "IT-Connect",
+      
+      // Journal du Net - Business IT
+      journaldunet: {
+        url: "https://www.journaldunet.com/rss/",
+        name: "Journal du Net",
         category: "entreprise",
         language: "fr"
       },
-      lemagit_conseils: {
-        url: "https://www.lemagit.fr/rss/Conseils-IT.xml",
-        name: "LeMagIT - Conseils IT",
+      
+      // Frandroid - Tech grand public
+      frandroid_logiciels: {
+        url: "https://www.frandroid.com/tag/windows/feed",
+        name: "Frandroid - Windows",
+        category: "particuliers",
+        language: "fr"
+      },
+      
+      // Numerama - Actualités tech
+      numerama: {
+        url: "https://www.numerama.com/feed/",
+        name: "Numerama",
+        category: "particuliers",
+        language: "fr"
+      },
+      
+      // Silicon.fr - Actualités pro IT
+      silicon: {
+        url: "https://www.silicon.fr/feed",
+        name: "Silicon.fr",
         category: "entreprise",
         language: "fr"
       },
-      lemondeinformatique_reseaux: {
-        url: "https://www.lemondeinformatique.fr/flux-rss/thematique/reseaux/rss.xml",
-        name: "Le Monde Informatique - Réseaux",
-        category: "iot",
+      
+      // Les Numériques - Tests et actus
+      lesnumeriques: {
+        url: "https://www.lesnumeriques.com/rss.xml",
+        name: "Les Numériques",
+        category: "particuliers",
+        language: "fr"
+      },
+      
+      // IT Social - Communauté IT Pro
+      itsocial: {
+        url: "https://www.itsocial.fr/feed/",
+        name: "IT Social",
+        category: "entreprise",
         language: "fr"
       }
     };
@@ -65,12 +128,20 @@ class WindowsRSSFetcher {
 
       logger.rss(`📡 Récupération du feed : ${source.name}`);
 
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
+
       const response = await fetch(source.url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*'
         },
+        signal: controller.signal,
         next: { revalidate: parseInt(process.env.NEXT_PUBLIC_RSS_CACHE_TIME) || 3600 } // Cache configurable
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -85,7 +156,11 @@ class WindowsRSSFetcher {
       return updates;
 
     } catch (error) {
-      logger.error(`❌ Erreur récupération feed ${sourceKey}:`, error);
+      if (error.name === 'AbortError') {
+        logger.error(`⏱️ Timeout pour ${sourceKey} (>10s)`);
+      } else {
+        logger.error(`❌ Erreur récupération feed ${sourceKey}:`, error.message);
+      }
       return [];
     }
   }
@@ -170,8 +245,26 @@ class WindowsRSSFetcher {
   }
 
   extractXmlTag(xml, tagName) {
-    const regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'is');
-    const match = xml.match(regex);
+    // Try regular tag first
+    let regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'is');
+    let match = xml.match(regex);
+    if (match) return match[1].trim();
+    
+    // Try self-closing tag with href attribute (for atom:link)
+    if (tagName === 'link') {
+      regex = new RegExp(`<link[^>]*href=["']([^"']+)["'][^>]*\/?>`, 'i');
+      match = xml.match(regex);
+      if (match) return match[1].trim();
+      
+      // Try simple link tag
+      regex = new RegExp(`<link[^>]*>([^<]+)<\/link>`, 'i');
+      match = xml.match(regex);
+      if (match) return match[1].trim();
+    }
+    
+    // Try with namespace prefix
+    regex = new RegExp(`<[a-z]+:${tagName}[^>]*>(.*?)<\/[a-z]+:${tagName}>`, 'is');
+    match = xml.match(regex);
     return match ? match[1].trim() : null;
   }
 
