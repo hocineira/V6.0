@@ -14,8 +14,8 @@ import {
   Network
 } from 'lucide-react';
 import Link from 'next/link';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/card';
-import StageGallery from '../../../components/StageGallery';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../../components/ui/card';
+import StageGallery from '../../../../components/StageGallery';
 
 export default function StagesPage() {
   
