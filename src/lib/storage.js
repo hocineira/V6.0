@@ -1,29 +1,117 @@
 // Service de stockage JSON local pour remplacer MongoDB
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 class JSONStorage {
   constructor() {
     this.dataDir = path.join(process.cwd(), 'data');
     this.dataFile = path.join(this.dataDir, 'rss-cache.json');
+    this.lockFile = path.join(this.dataDir, '.lock');
     this.ensureDataDir();
+    this.secureDataDir();
   }
 
   ensureDataDir() {
     try {
       if (!fs.existsSync(this.dataDir)) {
-        fs.mkdirSync(this.dataDir, { recursive: true });
+        fs.mkdirSync(this.dataDir, { recursive: true, mode: 0o700 }); // Restricted permissions
       }
     } catch (error) {
       console.error('Erreur création répertoire data:', error);
     }
   }
 
+  // Secure the data directory with proper permissions
+  secureDataDir() {
+    try {
+      // Set restrictive permissions on data directory (only owner can read/write/execute)
+      if (process.platform !== 'win32') {
+        fs.chmodSync(this.dataDir, 0o700);
+      }
+      
+      // Set restrictive permissions on data file if it exists
+      if (fs.existsSync(this.dataFile)) {
+        if (process.platform !== 'win32') {
+          fs.chmodSync(this.dataFile, 0o600); // Only owner can read/write
+        }
+      }
+    } catch (error) {
+      console.error('Erreur sécurisation répertoire:', error);
+    }
+  }
+
+  // Acquire lock for file operations (prevent race conditions)
+  async acquireLock(timeout = 5000) {
+    const startTime = Date.now();
+    while (fs.existsSync(this.lockFile)) {
+      if (Date.now() - startTime > timeout) {
+        throw new Error('Lock acquisition timeout');
+      }
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    fs.writeFileSync(this.lockFile, String(process.pid), { mode: 0o600 });
+  }
+
+  // Release lock
+  releaseLock() {
+    try {
+      if (fs.existsSync(this.lockFile)) {
+        fs.unlinkSync(this.lockFile);
+      }
+    } catch (error) {
+      console.error('Erreur libération lock:', error);
+    }
+  }
+
+  // Validate and sanitize data before loading
+  validateData(data) {
+    // Basic structure validation
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+
+    if (!Array.isArray(data.updates)) {
+      return false;
+    }
+
+    // Validate each update entry
+    for (const update of data.updates) {
+      if (!update.title || !update.link || !update.id) {
+        return false;
+      }
+      
+      // Validate no dangerous content
+      const dangerousPatterns = [/<script/i, /javascript:/i, /onerror=/i, /onclick=/i];
+      const textToCheck = JSON.stringify(update);
+      
+      for (const pattern of dangerousPatterns) {
+        if (pattern.test(textToCheck)) {
+          console.warn('Dangerous content detected in update data');
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+
   async loadData() {
+    await this.acquireLock();
     try {
       if (fs.existsSync(this.dataFile)) {
         const data = fs.readFileSync(this.dataFile, 'utf-8');
         const parsed = JSON.parse(data);
+        
+        // Validate data before using it
+        if (!this.validateData(parsed)) {
+          console.error('Invalid or potentially dangerous data detected');
+          return {
+            updates: [],
+            lastUpdated: new Date(),
+            version: '1.0'
+          };
+        }
         
         // Convert date strings back to Date objects for consistency
         if (parsed.updates) {
@@ -39,6 +127,8 @@ class JSONStorage {
       }
     } catch (error) {
       console.error('Erreur chargement données:', error);
+    } finally {
+      this.releaseLock();
     }
     
     return {
@@ -49,7 +139,14 @@ class JSONStorage {
   }
 
   async saveData(data) {
+    await this.acquireLock();
     try {
+      // Validate before saving
+      if (!this.validateData(data)) {
+        console.error('Attempted to save invalid data');
+        return false;
+      }
+
       // Prepare data for JSON serialization
       const dataToSave = {
         ...data,
@@ -62,11 +159,22 @@ class JSONStorage {
         lastUpdated: new Date().toISOString()
       };
 
-      fs.writeFileSync(this.dataFile, JSON.stringify(dataToSave, null, 2), 'utf-8');
+      // Write to temp file first, then rename (atomic operation)
+      const tempFile = this.dataFile + '.tmp';
+      fs.writeFileSync(tempFile, JSON.stringify(dataToSave, null, 2), { 
+        encoding: 'utf-8',
+        mode: 0o600 // Secure permissions
+      });
+      
+      // Atomic rename
+      fs.renameSync(tempFile, this.dataFile);
+      
       return true;
     } catch (error) {
       console.error('Erreur sauvegarde données:', error);
       return false;
+    } finally {
+      this.releaseLock();
     }
   }
 

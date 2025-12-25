@@ -1,11 +1,28 @@
 // Service RSS pour récupérer et traiter les flux Windows
-import { parseStringPromise } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { logger } from './logger';
 
 class WindowsRSSFetcher {
   constructor() {
+    // Configure secure XML parser
+    this.xmlParser = new XMLParser({
+      ignoreAttributes: false,
+      attributeNamePrefix: '@_',
+      textNodeName: '#text',
+      parseAttributeValue: true,
+      trimValues: true,
+      // Security options
+      allowBooleanAttributes: true,
+      parseTagValue: false, // Prevent injection
+      processEntities: true,
+      htmlEntities: true,
+      ignoreDeclaration: true,
+      ignorePiTags: true,
+      removeNSPrefix: true // Simplify namespace handling
+    });
+
     this.sources = {
       // IT-Connect - Très fiable, spécialisé Windows/Infrastructure
       it_connect: {
@@ -141,8 +158,9 @@ class WindowsRSSFetcher {
 
       const xmlText = await response.text();
       
-      // Parse XML manually for better control
-      const updates = this.parseRSSFeed(xmlText, source);
+      // Parse XML using secure fast-xml-parser
+      const parsedData = this.xmlParser.parse(xmlText);
+      const updates = this.parseRSSFeed(parsedData, source);
       
       logger.rss(`✅ ${updates.length} mises à jour récupérées de ${source.name}`);
       return updates;
@@ -157,18 +175,29 @@ class WindowsRSSFetcher {
     }
   }
 
-  parseRSSFeed(xmlText, source) {
+  parseRSSFeed(parsedData, source) {
     try {
-      // Simple XML parsing for RSS
-      const itemRegex = /<item>(.*?)<\/item>/gs;
       const items = [];
-      let match;
+      
+      // Handle both RSS and Atom feeds
+      let feedItems = [];
+      
+      if (parsedData.rss && parsedData.rss.channel && parsedData.rss.channel.item) {
+        // RSS format
+        feedItems = Array.isArray(parsedData.rss.channel.item) 
+          ? parsedData.rss.channel.item 
+          : [parsedData.rss.channel.item];
+      } else if (parsedData.feed && parsedData.feed.entry) {
+        // Atom format
+        feedItems = Array.isArray(parsedData.feed.entry) 
+          ? parsedData.feed.entry 
+          : [parsedData.feed.entry];
+      }
 
-      while ((match = itemRegex.exec(xmlText)) !== null) {
-        const itemXml = match[1];
-        const item = this.parseRSSItem(itemXml, source);
-        if (item && this.isRelevantForWindows(item)) {
-          items.push(item);
+      for (const item of feedItems) {
+        const parsedItem = this.parseRSSItem(item, source);
+        if (parsedItem && this.isRelevantForWindows(parsedItem)) {
+          items.push(parsedItem);
         }
       }
 
@@ -179,13 +208,15 @@ class WindowsRSSFetcher {
     }
   }
 
-  parseRSSItem(itemXml, source) {
+  parseRSSItem(item, source) {
     try {
-      // Extract basic fields
-      const title = this.cleanHtml(this.extractXmlTag(itemXml, 'title')) || "Sans titre";
-      const link = this.extractXmlTag(itemXml, 'link') || "";
-      const description = this.cleanHtml(this.extractXmlTag(itemXml, 'description') || "");
-      const pubDate = this.extractXmlTag(itemXml, 'pubDate') || new Date().toISOString();
+      // Extract fields based on RSS or Atom format
+      const title = this.cleanHtml(this.getItemField(item, ['title'])) || "Sans titre";
+      const link = this.getItemField(item, ['link', 'id']) || "";
+      const description = this.cleanHtml(
+        this.getItemField(item, ['description', 'summary', 'content', 'content:encoded']) || ""
+      );
+      const pubDate = this.getItemField(item, ['pubDate', 'published', 'updated']) || new Date().toISOString();
 
       // Parse publication date
       let publishedDate = new Date();
@@ -236,29 +267,25 @@ class WindowsRSSFetcher {
     }
   }
 
-  extractXmlTag(xml, tagName) {
-    // Try regular tag first
-    let regex = new RegExp(`<${tagName}[^>]*>(.*?)<\/${tagName}>`, 'is');
-    let match = xml.match(regex);
-    if (match) return match[1].trim();
-    
-    // Try self-closing tag with href attribute (for atom:link)
-    if (tagName === 'link') {
-      regex = new RegExp(`<link[^>]*href=["']([^"']+)["'][^>]*\/?>`, 'i');
-      match = xml.match(regex);
-      if (match) return match[1].trim();
-      
-      // Try simple link tag
-      regex = new RegExp(`<link[^>]*>([^<]+)<\/link>`, 'i');
-      match = xml.match(regex);
-      if (match) return match[1].trim();
+  getItemField(item, fieldNames) {
+    for (const field of fieldNames) {
+      if (item[field]) {
+        // Handle different field types
+        if (typeof item[field] === 'string') {
+          return item[field];
+        } else if (item[field]['#text']) {
+          return item[field]['#text'];
+        } else if (item[field]['@_href']) {
+          return item[field]['@_href'];
+        } else if (typeof item[field] === 'object') {
+          return JSON.stringify(item[field]);
+        }
+      }
     }
-    
-    // Try with namespace prefix
-    regex = new RegExp(`<[a-z]+:${tagName}[^>]*>(.*?)<\/[a-z]+:${tagName}>`, 'is');
-    match = xml.match(regex);
-    return match ? match[1].trim() : null;
+    return null;
   }
+
+  // Remove old extractXmlTag method since we're using fast-xml-parser now
 
   cleanHtml(htmlText) {
     if (!htmlText) return "";

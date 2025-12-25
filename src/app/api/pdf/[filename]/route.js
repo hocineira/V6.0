@@ -1,8 +1,27 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
+import { rateLimiter } from '../../../../lib/rate-limiter.js'
 
 export async function GET(request, { params }) {
+  // Apply rate limiting
+  const rateLimitResult = rateLimiter.check(request);
+  if (!rateLimitResult.allowed) {
+    return new Response(
+      JSON.stringify({ 
+        error: rateLimitResult.message,
+        retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+      }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000))
+        }
+      }
+    );
+  }
+
   try {
     // Next.js 16 utilise des params asynchrones
     const { filename } = await params
