@@ -450,7 +450,7 @@ export default function BTSSIOPage() {
       </section>
 
       {/* Navigation Tabs - Mobile Optimized */}
-      <section className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b">
+      <section className="sticky top-0 z-40 bg-white border-b shadow-sm">
         <div className="container mx-auto px-2 sm:px-4">
           <div className="flex justify-center">
             {/* Mobile: Scrollable horizontal tabs */}

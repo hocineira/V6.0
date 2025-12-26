@@ -21,6 +21,41 @@
    Firefox a des problèmes majeurs avec backdrop-filter et blur
    ======================================== */
 
+/* FIX MOBILE: Désactiver backdrop-blur sur mobile pour tous les navigateurs */
+@media (max-width: 768px) {
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .backdrop-blur-2xl,
+  .backdrop-blur-3xl,
+  *[class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+  
+  /* Remplacer les backgrounds transparents par des backgrounds solides sur mobile */
+  .bg-white\/80,
+  .bg-white\/90,
+  .bg-white\/70,
+  .bg-white\/60,
+  *[class*="bg-white/"] {
+    background-color: rgb(255, 255, 255) !important;
+  }
+  
+  .bg-slate-50\/80,
+  .bg-slate-50\/90,
+  *[class*="bg-slate-50/"] {
+    background-color: rgb(248, 250, 252) !important;
+  }
+  
+  .bg-gray-50\/80,
+  .bg-gray-50\/90,
+  *[class*="bg-gray-50/"] {
+    background-color: rgb(249, 250, 251) !important;
+  }
+}
+
 /* Détection Firefox via classe JS */
 .firefox-browser .glass-effect,
 .firefox-browser .glass-effect-strong,
