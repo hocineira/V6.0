@@ -67,7 +67,7 @@ export default function AboutPage() {
           <StaggerContainer staggerDelay={0.15} className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-2xl mx-auto mt-8">
             <StaggerItem>
               <ScaleIn scale={0.7} duration={0.6}>
-                <div className="flex items-center justify-center space-x-2 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-blue-100">
+                <div className="flex items-center justify-center space-x-2 bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-blue-100">
                   <MapPin className="w-5 h-5 text-blue-600" />
                   <span className="text-sm font-medium text-gray-700">Marseille, France</span>
                 </div>
@@ -75,7 +75,7 @@ export default function AboutPage() {
             </StaggerItem>
             <StaggerItem>
               <ScaleIn scale={0.7} duration={0.6}>
-                <div className="flex items-center justify-center space-x-2 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-green-100">
+                <div className="flex items-center justify-center space-x-2 bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-green-100">
                   <Calendar className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-gray-700">20 ans</span>
                 </div>
@@ -83,7 +83,7 @@ export default function AboutPage() {
             </StaggerItem>
             <StaggerItem>
               <ScaleIn scale={0.7} duration={0.6}>
-                <div className="flex items-center justify-center space-x-2 bg-white/90 backdrop-blur-sm rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-purple-100">
+                <div className="flex items-center justify-center space-x-2 bg-white rounded-xl p-4 shadow-md hover:shadow-xl transition-all hover:scale-105 cursor-pointer border border-purple-100">
                   <GraduationCap className="w-5 h-5 text-purple-600" />
                   <span className="text-sm font-medium text-gray-700">BTS SIO SISR</span>
                 </div>
@@ -97,7 +97,7 @@ export default function AboutPage() {
       <section className="py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <ScaleIn delay={0.2} scale={0.95} duration={0.7}>
-            <Card className="bg-gradient-to-br from-white to-blue-50/30 backdrop-blur-sm border-2 border-blue-100 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
+            <Card className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-100 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
               <CardHeader className="text-center pb-6">
                 <FadeIn delay={0.3} direction="down" distance={20}>
                   <CardTitle className="text-3xl md:text-4xl font-bold flex items-center justify-center gap-3">
@@ -160,7 +160,7 @@ export default function AboutPage() {
             {education.map((edu, index) => (
               <StaggerItem key={index}>
                 <ScaleIn scale={0.92} duration={0.7}>
-                  <Card className="bg-white/90 backdrop-blur-md border-2 border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] hover:border-blue-200 group">
+                  <Card className="bg-white border-2 border-gray-100 shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-[1.03] hover:border-blue-200 group">
                     <CardContent className="p-6 md:p-8">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex-1">

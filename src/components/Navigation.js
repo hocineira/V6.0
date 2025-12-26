@@ -140,8 +140,8 @@ export default function Navigation() {
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 hidden md:block ${
         scrolled 
-          ? 'glass-effect-strong border-b border-white/20 shadow-2xl shadow-black/10' 
-          : 'glass-effect border-b border-white/10 shadow-lg shadow-black/5'
+          ? 'bg-white border-b border-gray-200 shadow-2xl' 
+          : 'bg-white border-b border-gray-100 shadow-lg'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -196,7 +196,7 @@ export default function Navigation() {
                         {isOpen && (
                           <div 
                             data-dropdown-content="true"
-                            className="absolute top-full left-0 mt-2 w-64 bg-white/95 backdrop-blur-lg shadow-lg rounded-lg border border-white/20 overflow-hidden z-50"
+                            className="absolute top-full left-0 mt-2 w-64 bg-white shadow-lg rounded-lg border border-gray-200 overflow-hidden z-50"
                           >
                             {item.submenu.map((subItem) => {
                               const SubIcon = subItem.icon
@@ -284,7 +284,7 @@ export default function Navigation() {
       }`}>
         {/* Backdrop */}
         <div 
-          className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-500 ${
+          className={`absolute inset-0 bg-black/50 transition-opacity duration-500 ${
             isOpen ? 'opacity-100' : 'opacity-0'
           }`}
           onClick={() => setIsOpen(false)}

@@ -198,7 +198,7 @@ export default function VeilleTechnologique() {
         <div className="relative container mx-auto px-4">
           <FadeIn delay={0.1}>
             <Link href="/veilles" className="inline-block mb-6">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-colors backdrop-blur-sm">
+              <button className="flex items-center space-x-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-white transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
@@ -210,7 +210,7 @@ export default function VeilleTechnologique() {
           <div className="text-center text-white">
             <ScaleIn delay={0.2}>
               <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm text-4xl">
+                <div className="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center text-4xl">
                   🪟
                 </div>
               </div>
@@ -230,14 +230,14 @@ export default function VeilleTechnologique() {
 
             <FadeIn delay={0.5}>
               <div className="flex flex-wrap justify-center items-center gap-4 mb-6">
-                <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 flex items-center space-x-2">
+                <div className="bg-white/20 rounded-full px-6 py-3 flex items-center space-x-2">
                   <span className="text-2xl font-bold">{total}</span>
                   <span className="text-blue-100">actualités</span>
                 </div>
                 
                 <button 
                   onClick={() => window.location.reload()}
-                  className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 flex items-center space-x-2 hover:bg-white/30 transition-colors"
+                  className="bg-white/20 rounded-full px-6 py-3 flex items-center space-x-2 hover:bg-white/30 transition-colors"
                 >
                   <span>Actualiser RSS</span>
                 </button>
@@ -245,7 +245,7 @@ export default function VeilleTechnologique() {
             </FadeIn>
 
             {error && (
-              <div className="bg-red-500/20 backdrop-blur-sm border border-red-300 text-red-100 px-4 py-2 rounded-lg max-w-md mx-auto">
+              <div className="bg-red-500/20 border border-red-300 text-red-100 px-4 py-2 rounded-lg max-w-md mx-auto">
                 ⚠️ Erreur HTTP: 502
               </div>
             )}
@@ -254,7 +254,7 @@ export default function VeilleTechnologique() {
       </section>
 
       {/* ==================== NAVIGATION SECTIONS ==================== */}
-      <section className="py-6 bg-white/80 backdrop-blur-sm border-b border-slate-200 sticky top-0 z-40">
+      <section className="py-6 bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4">
           <div className="flex flex-wrap justify-center gap-2">
             {sections.map((section) => (
@@ -478,7 +478,7 @@ export default function VeilleTechnologique() {
                   { icon: '🌐', title: 'Basé sur le web', desc: "Accessible depuis n'importe quel navigateur" },
                   { icon: '🔧', title: 'Outils intégrés', desc: 'Certificats, pare-feu, stockage, réseaux' }
                 ].map((item, idx) => (
-                  <div key={idx} className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+                  <div key={idx} className="bg-white/10 rounded-xl p-4">
                     <div className="text-2xl mb-2">{item.icon}</div>
                     <h4 className="font-semibold mb-1">{item.title}</h4>
                     <p className="text-sm text-blue-100">{item.desc}</p>
